@@ -1,15 +1,15 @@
 EnviroMod - a realtime synthesis environment for amplitude and frequency modulation. 
 
-Our application will allow users to generate tones using amplitude and frequency modulation with accelerometer data. Using location services, the spectral timbre of the generated tones will be different in every place. 
+Our application will allow users to generate tones using amplitude and frequency modulation with accelerometer data. Using location services, the spectral timbre of the generated tones will be different in every place through a random seeding generator based on GPS location. 
 
-Our main app screen will display seeveral options. 
+Our main app screen will display several options. 
 
-A 'How To' page will bring up a new activity to teach the user what sounds will be generated and will give a brief explanation of amplitude and frequency modulation synthesis. 
+A 'Help' page will bring up a new activity to teach the user what sounds will be generated and will give a brief explanation of amplitude and frequency modulation synthesis. 
 
 A 'Settings' page will allow the user to login with SoundCloud and to toggle location services. 
 
 A 'New Recording' page will bring up an interface that displays information regarding generated sounds. There will be a switch to alternate between frequency modulation and amplitude modulation synthesis, as well as displays for different changing parameters. These parameters (carrier frequency, modulation frequency/amplitude, modulation depth) will change based on accelerometer data. Changes in the X axis will manipulate the carrier frequency, changes in the Y axis will manipulate the modulation frequency/amplitude, and changes in the Z axis will manipulate modulation depth. The user will be given the option to record their sounds, which will show a recording timer at the top. While recording, the user can click Save or Return, which will bring them back to the main page, deleting their recording. If they choose to save the recording, the user will click Save, which will bring them to a new screen which will ask for a title, and will give the option to post the song on SoundCloud. There will be a cancel button in case the user decides to delete their recording. When Save is clicked, the recording is saved offline as well as posted to SoundCloud if that option is chosen. 
 
-A 'Play Existing Recordings' page will bring up past recordings. Each recording can be played by tapping on them and will display the elapsed time and total time of the recording. Recordings can be deleted and removed from the device. Information regarding the recordings can also be edited and updated on SoundCloud.
+A 'Saved Recordings' page will bring up past recordings. Each recording can be played by tapping on them and will display the elapsed time and total time of the recording. Recordings can be deleted and removed from the device. Information regarding the recordings can also be edited and updated on SoundCloud.
 
 In order to implement the audio environment, we will be using libpd, which is a library for Pure Data. Pure Data is an audio programming language for interactive compute music. libpd allows Pure Data to run on Android as well as several other devices. A sine oscillator (carrier) will be created in the 'New Recording' page. The starting frequency of this oscillator will be dependent on the GPS coordinates of the user (within a range of 220 hz to 1500 hz for listenability). There will be another sine oscillator (modulator) that will be used to modulate either the amplitude of the carrier signal, or the frequency of the carrier depending on which mode is set (AM or FM). There will be another sine oscillator (modulator depth) which will determine the depth of modulation. These parameters will be controlled by the accelerometer data. 
