@@ -1,1 +1,6 @@
-include ':app'
+include ':app', ':PdCore', ':ScenePlayer', ':PdTest', ':CircleOfFifths', ':Voice-O-Rama'
+project(':PdCore').projectDir = new File('pd-for-android/PdCore')
+project(':ScenePlayer').projectDir = new File('pd-for-android/ScenePlayer')
+project(':PdTest').projectDir = new File('pd-for-android/PdTest')
+project(':CircleOfFifths').projectDir = new File('pd-for-android/CircleOfFifths')
+project(':Voice-O-Rama').projectDir = new File('pd-for-android/Voice-O-Rama')
