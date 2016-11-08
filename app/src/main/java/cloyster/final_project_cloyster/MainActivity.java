@@ -1,3 +1,19 @@
+/*
+ * Libraries Used:
+ * Pure Data for Android (https://github.com/libpd/pd-for-android)
+ * Java Wrapper for SoundCloud API by Birdcage (https://github.com/birdcage/soundcloud-web-api-android)
+ *
+ * *** IMPORTANT NOTE FOR MILESTONE 2 ***
+ * Prof. Sherriff told us this was fine, just to make a note of it in our code.
+ * We are planning to use SoundCloud as our 3rd party web service but recently
+ * they changed their policies on accepting app registration so now the process
+ * a lot longer and none of their api is usable without authentication so therefore
+ * we can't do any of that yet while we wait on approval. But we do have the java
+ * wrapper library fully implemented and working. Also we have modified it to work
+ * for uploading tracks to SoundCloud. Therefore all our SoundCloud related code
+ * should work, or be very close to working, we just can't test it yet to be sure.
+ */
+
 package cloyster.final_project_cloyster;
 
 import android.content.Context;
@@ -25,6 +41,10 @@ import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import com.jlubecki.soundcloud.webapi.android.SoundCloudAPI;
+import com.jlubecki.soundcloud.webapi.android.SoundCloudService;
+import com.jlubecki.soundcloud.webapi.android.models.Track;
 
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdService;
@@ -63,6 +83,16 @@ public class MainActivity extends AppCompatActivity {
     int mNumSamples; // number of samples to play
     boolean mShouldContinue;
 
+    /**
+     * SoundCloud Authentication
+     */
+    private String AUTH_TOKEN_KEY = "";
+    private String CLIENT_ID = "";
+    private String CLIENT_SECRET = "";
+    private String PREFS_NAME = "";
+    private String REDIRECT = "";
+
+    private SoundCloudService soundcloud;
 
     /**
      * The PdService is provided by the pd-for-android library.
@@ -130,6 +160,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // SoundCloudAPI api = new SoundCloudAPI(CLIENT_ID);
+        // soundcloud = api.getService();
+
         AudioParameters.init(this);
         bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);
         initGui();
@@ -193,6 +226,9 @@ public class MainActivity extends AppCompatActivity {
         this.btnPlayRecording.setOnTouchListener( new View.OnTouchListener() {
             @Override
             public boolean onTouch( View v, MotionEvent event ) {
+                /* Commented out because app will currently crash when 'Play Recording'
+                    button is pressed.
+
                 if ( event.getAction() == MotionEvent.ACTION_DOWN ) {
 
                     new Thread(new Runnable() {
@@ -252,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
 
                 } else if ( event.getAction() == MotionEvent.ACTION_UP ) {
                     PdBase.sendFloat( "osc_volume", 0 ); // quiet down
-                }
+                }*/
                 return false;
             }
         } );
@@ -425,6 +461,17 @@ public class MainActivity extends AppCompatActivity {
                 latitude = location.getLatitude();
             }
         }
+
+        /**
+         * IN DEVELOPMENT
+         *
+         * Allowing user to upload audio file to SoundCloud as well when he saves a file locally
+         */
+        /*
+        Track track = new Track(title, recFile);
+        soundcloud.postUpload(track);
+         */
+
         db.addRecording(recFile, recStart, duration, longitude, latitude, recordingId);
         recFile = null;
         post("Finished recording");
