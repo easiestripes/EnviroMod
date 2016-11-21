@@ -16,14 +16,21 @@
 
 package cloyster.final_project_cloyster;
 
+import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Path;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.ComponentName;
@@ -59,6 +66,12 @@ import org.puredata.core.PdBase;
 import org.puredata.core.utils.IoUtils;
 import org.puredata.*;
 
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ShortBuffer;
 import java.io.File;
 import java.io.IOException;
@@ -68,8 +81,7 @@ import java.io.Reader;
 
 import static java.util.logging.Logger.global;
 
-public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "Frequency Mod Synth";
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, LocationListener, SensorEventListener {
 
     Button btnPlaySound;
     ToggleButton btnToggleSound;
@@ -97,6 +109,26 @@ public class MainActivity extends AppCompatActivity {
     int fileNum=1;
     EditText editText;
     String title;
+
+    private SensorManager senSensorManager;
+    private Sensor senAccelerometer;
+    private LocationManager locationManager;
+    private int MY_PERMISSION_ACCESS_FINE_LOCATION;
+    private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int PICK_FILE_REQUEST = 1;
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private String selectedFilePath;
+    private String SERVER_URL = "http://www.austinpetrie.com/enviromod/UploadToServer.php";
+    TextView browseFiles, lat, lng;
+    Button bUpload, check_permission, request_permission;
+    TextView tvFileName;
+    ProgressDialog dialog;
+    Location location;
+    double latitude;
+    double longitude;
+    private long lastUpdate = 0;
+    private float last_x, last_y, last_z;
+    private static final int SHAKE_THRESHOLD = 600;
 
 
     /**
@@ -166,6 +198,35 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         setContentView(R.layout.activity_main);
 
+        // GPS
+        check_permission = (Button)findViewById(R.id.check_permission);
+        request_permission = (Button)findViewById(R.id.request_permission);
+        check_permission.setOnClickListener(this);
+        request_permission.setOnClickListener(this);
+        lat = (TextView) findViewById(R.id.lat);
+        lng = (TextView) findViewById(R.id.lng);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 1, this);
+
+        if (checkPermission()) {
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (location != null) {
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
+
+                lat.setText("Latitude: " + latitude);
+                lng.setText("Longitude: " + longitude);
+            }
+        }
+
+        // Sensor
+        senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+
+        // PD
         String recDirPath = intent.getStringExtra(RECORDING_PATH);
         recDir = new File(recDirPath != null ? recDirPath : getResources().getString(R.string.recording_folder));
         if (recDir.isFile() || (!recDir.exists() && !recDir.mkdirs())) recDir = null;
@@ -208,6 +269,157 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected( item );
     }
+
+
+    // Sensor
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        Sensor mySensor = event.sensor;
+
+        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            long curTime = System.currentTimeMillis();
+
+            if ((curTime - lastUpdate) > 100) {
+                long diffTime = (curTime - lastUpdate);
+                lastUpdate = curTime;
+
+                float speed = Math.abs(x + y + z - last_x - last_y - last_z)/ diffTime * 10000;
+                if (speed > SHAKE_THRESHOLD) {
+
+                }
+                last_x = x;
+                last_y = y;
+                last_z = z;
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    protected void onPause() {
+        super.onPause();
+        senSensorManager.unregisterListener(this);
+    }
+
+    protected void onResume() {
+        super.onResume();
+        senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    // GPS
+
+    @Override
+    public void onLocationChanged(Location location) {
+        lat.setText("" + location.getLatitude());
+        lng.setText("" + location.getLongitude());
+
+        String msg = "New Latitude: " + location.getLatitude()
+                + "New Longitude: " + location.getLongitude();
+
+        Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        startActivity(intent);
+        Toast.makeText(getBaseContext(), "Gps is turned off!! ",
+                Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Toast.makeText(getBaseContext(), "Gps is turned on!! ",
+                Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        // TODO Auto-generated method stub
+    }
+
+    private boolean checkPermission() {
+        int result = ContextCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+        if (result == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void requestPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)){
+            Toast.makeText(getBaseContext(),"GPS permission allows us to access location data. Please allow in App Settings for additional functionality.",Toast.LENGTH_LONG).show();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getBaseContext(), "Permission Granted, Now you can access location data.",
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getBaseContext(), "Permission Denied, You cannot access location data.",
+                            Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(v == check_permission) {
+            if (checkPermission()) {
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                /*latitude = location.getLatitude();
+                longitude = location.getLongitude();
+
+                Log.i(TAG,"Lat: " + latitude);
+                Log.i(TAG,"Lng: " + longitude);*/
+                if (location != null) {
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+
+                    Log.i(TAG,"Lat: " + latitude);
+                    Log.i(TAG,"Lng: " + longitude);
+
+
+                    lat.setText("Latitude: " + latitude);
+                    lng.setText("Longitude: " + longitude);
+                }
+
+                Toast.makeText(getBaseContext(), "Permission already granted.",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getBaseContext(), "Please request permission.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        if(v == request_permission) {
+            if (!checkPermission()) {
+                requestPermission();
+            } else {
+                Toast.makeText(getBaseContext(), "Permission already granted.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    // PD
 
     /**
      * Initialises the user interface elements and necessary handlers responsibly for the interaction with the
@@ -294,6 +506,28 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     PdBase.sendBang("writeStop"); // stop recording otherwise
+
+                    // Upload file to web server
+
+                    String dir = getFilesDir().getAbsolutePath();
+                    File d = new File(dir);
+                    String[] files = d.list();
+                    //last = files[files.length-1];
+                    selectedFilePath = dir + "/" + files[files.length-1];
+                    Log.i(TAG,"selectedFilePath: " + dir + "/" + selectedFilePath);
+                    if(selectedFilePath != null) {
+                        dialog = ProgressDialog.show(MainActivity.this,"","Uploading File...",true);
+
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //creating new thread to handle Http Operations
+                                uploadFile(selectedFilePath);
+                            }
+                        }).start();
+                    } else {
+                        Toast.makeText(MainActivity.this,"Please choose a File First",Toast.LENGTH_SHORT).show();
+                    }
             }
         }
         });
@@ -406,5 +640,124 @@ public class MainActivity extends AppCompatActivity {
                 toast.show();
             }
         });
+    }
+
+
+    //android upload file to server
+    public int uploadFile(final String selectedFilePath){
+
+        int serverResponseCode = 0;
+
+        HttpURLConnection connection;
+        DataOutputStream dataOutputStream;
+        String lineEnd = "\r\n";
+        String twoHyphens = "--";
+        String boundary = "*****";
+
+
+        int bytesRead,bytesAvailable,bufferSize;
+        byte[] buffer;
+        int maxBufferSize = 1 * 1024 * 1024;
+        File selectedFile = new File(selectedFilePath);
+
+
+        String[] parts = selectedFilePath.split("/");
+        final String fileName = parts[parts.length-1];
+
+        if (!selectedFile.isFile()){
+            dialog.dismiss();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //tvFileName.setText("Source File Doesn't Exist: " + selectedFilePath);
+                }
+            });
+            return 0;
+        }else{
+            try{
+                FileInputStream fileInputStream = new FileInputStream(selectedFile);
+                URL url = new URL(SERVER_URL);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);//Allow Inputs
+                connection.setDoOutput(true);//Allow Outputs
+                connection.setUseCaches(false);//Don't use a cached Copy
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Connection", "Keep-Alive");
+                connection.setRequestProperty("ENCTYPE", "multipart/form-data");
+                connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+                connection.setRequestProperty("uploaded_file",selectedFilePath);
+
+                //creating new dataoutputstream
+                dataOutputStream = new DataOutputStream(connection.getOutputStream());
+
+                //writing bytes to data outputstream
+                dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
+                dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""
+                        + selectedFilePath + "\"" + lineEnd);
+
+                dataOutputStream.writeBytes(lineEnd);
+
+                //returns no. of bytes present in fileInputStream
+                bytesAvailable = fileInputStream.available();
+                //selecting the buffer size as minimum of available bytes or 1 MB
+                bufferSize = Math.min(bytesAvailable,maxBufferSize);
+                //setting the buffer as byte array of size of bufferSize
+                buffer = new byte[bufferSize];
+
+                //reads bytes from FileInputStream(from 0th index of buffer to buffersize)
+                bytesRead = fileInputStream.read(buffer,0,bufferSize);
+
+                //loop repeats till bytesRead = -1, i.e., no bytes are left to read
+                while (bytesRead > 0){
+                    //write the bytes read from inputstream
+                    dataOutputStream.write(buffer,0,bufferSize);
+                    bytesAvailable = fileInputStream.available();
+                    bufferSize = Math.min(bytesAvailable,maxBufferSize);
+                    bytesRead = fileInputStream.read(buffer,0,bufferSize);
+                }
+
+                dataOutputStream.writeBytes(lineEnd);
+                dataOutputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+
+                serverResponseCode = connection.getResponseCode();
+                String serverResponseMessage = connection.getResponseMessage();
+
+                Log.i(TAG, "Server Response is: " + serverResponseMessage + ": " + serverResponseCode);
+
+                //response code of 200 indicates the server status OK
+                if(serverResponseCode == 200){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //tvFileName.setText("File Upload completed.\n\n You can see the uploaded file here: \n\n" + "http://austinpetrie.com/enviromod/uploads/"+ fileName);
+                        }
+                    });
+                }
+
+                //closing the input and output streams
+                fileInputStream.close();
+                dataOutputStream.flush();
+                dataOutputStream.close();
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this,"File Not Found",Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, "URL error!", Toast.LENGTH_SHORT).show();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, "Cannot Read/Write File!", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+            return serverResponseCode;
+        }
     }
 }
