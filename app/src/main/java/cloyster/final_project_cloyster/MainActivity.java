@@ -1,6 +1,7 @@
 package cloyster.final_project_cloyster;
 
 import android.content.Context;
+import android.graphics.Path;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
@@ -16,15 +17,23 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdService;
@@ -40,6 +49,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import static java.util.logging.Logger.global;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Frequency Mod Synth";
 
@@ -51,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
     SeekBar seekbarModulatorDepth;
     ToggleButton btnRecord;
     Button btnPlayRecording;
-    private File recDir = null;
     private ToggleButton record;
     private long recStart;
     private String recFile = null;
@@ -62,7 +72,13 @@ public class MainActivity extends AppCompatActivity {
     ShortBuffer mSamples; // the samples to play
     int mNumSamples; // number of samples to play
     boolean mShouldContinue;
-
+    public static final String RECORDING_PATH = "recording_path";
+    private File folder;
+    private File recDir = null;
+    private String refFile = null;
+    int fileNum=1;
+    EditText editText;
+    String title;
 
     /**
      * The PdService is provided by the pd-for-android library.
@@ -128,8 +144,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
         setContentView(R.layout.activity_main);
-
+        String recDirPath = intent.getStringExtra(RECORDING_PATH);
+        recDir = new File(recDirPath != null ? recDirPath : getResources().getString(R.string.recording_folder));
+        if (recDir.isFile() || (!recDir.exists() && !recDir.mkdirs())) recDir = null;
         AudioParameters.init(this);
         bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);
         initGui();
@@ -147,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu( Menu menu ) {
-        getMenuInflater().inflate( R.menu.menu_main, menu );
+        getMenuInflater().inflate(R.menu.menu_main, menu );
         return true;
     }
 
@@ -188,72 +207,31 @@ public class MainActivity extends AppCompatActivity {
             }
         } );
 
+        editText = (EditText)findViewById(R.id.editText);
+        /*editText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    title = editText.getText().toString().trim();
+                    return true;
+                }
+                return false;
+            }
+        });
+        */
+
         // touch to play back recording
         this.btnPlayRecording = (Button) findViewById( R.id.buttonPlayRecording );
         this.btnPlayRecording.setOnTouchListener( new View.OnTouchListener() {
             @Override
             public boolean onTouch( View v, MotionEvent event ) {
-                if ( event.getAction() == MotionEvent.ACTION_DOWN ) {
-
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            int bufferSize = AudioTrack.getMinBufferSize(48000, AudioFormat.CHANNEL_OUT_MONO,
-                                    AudioFormat.ENCODING_PCM_16BIT);
-                            if (bufferSize == AudioTrack.ERROR || bufferSize == AudioTrack.ERROR_BAD_VALUE) {
-                                bufferSize = 48000 * 2;
-                            }
-
-                            AudioTrack audioTrack = new AudioTrack(
-                                    AudioManager.STREAM_MUSIC,
-                                    48000,
-                                    AudioFormat.CHANNEL_OUT_MONO,
-                                    AudioFormat.ENCODING_PCM_16BIT,
-                                    bufferSize,
-                                    AudioTrack.MODE_STREAM);
-                            short[] buffer = new short[bufferSize];
-                            audioTrack.write(buffer, 0, 10000000);
-
-                            audioTrack.play();
-
-                            Log.v("TESTING:", "Audio streaming started");
-
-
-
-                            //mSamples.get(buffer, 0, 0);
-
-                            mSamples.rewind();
-                            int limit = mNumSamples;
-                            int totalWritten = 0;
-                            while (mSamples.position() < limit && mShouldContinue) {
-                                int numSamplesLeft = limit - mSamples.position();
-                                int samplesToWrite;
-                                if (numSamplesLeft >= buffer.length) {
-                                    mSamples.get(buffer);
-                                    samplesToWrite = buffer.length;
-                                } else {
-                                    for (int i = numSamplesLeft; i < buffer.length; i++) {
-                                        buffer[i] = 0;
-                                    }
-                                    mSamples.get(buffer, 0, numSamplesLeft);
-                                    samplesToWrite = numSamplesLeft;
-                                }
-                                totalWritten += samplesToWrite;
-                                audioTrack.write(buffer, 0, samplesToWrite);
-                            }
-
-                            if (!mShouldContinue) {
-                                audioTrack.release();
-                            }
-
-                            //Log.v("TAG", "Audio streaming finished. Samples written: " + totalWritten);
-                        }
-                    }).start();
-
-                } else if ( event.getAction() == MotionEvent.ACTION_UP ) {
-                    PdBase.sendFloat( "osc_volume", 0 ); // quiet down
-                }
-                return false;
+                    //PdBase.sendFloat("osc_volume", 0);
+                    String dir = getFilesDir().getAbsolutePath();
+                    PdBase.sendSymbol("readFile", title);
+                    PdBase.sendBang("readBang");
+                    PdBase.sendBang("readStart");
+                    //fileNum++;
+                    return false;
             }
         } );
 
@@ -279,29 +257,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged( CompoundButton buttonView, boolean isChecked ) {
                 if (isChecked ) {
-                    PdBase.sendBang("filename"); // open file
-                    Log.println(Log.DEBUG, "PDBASE", String.valueOf(PdBase.exists("recording1.wav")));
-                    PdBase.sendBang("start"); // begin recording with bang
+                    title = "hello";
+                    title = editText.getText().toString();
+                    String dir = getFilesDir().getAbsolutePath();
+                    PdBase.sendSymbol("writeFile", title); // open file
+                    PdBase.sendBang("writeStart");
+                    File d = new File(dir);
+                    String[] files = d.list();
+                    post(dir);
+                    for (int i = 0; i < files.length; i++){
+                        post(i + ": " + files[i]);
+                    }
+
                 }
                 else {
-                    PdBase.sendBang("stop"); // stop recording otherwise
-                    int id = getResources().getIdentifier("recording1.wav", "raw", getPackageName());
-                    InputStream rawRes = null;
-                    try {
-                        rawRes = getResources().openRawResource(R.raw.recording1);
-                    }
-                    catch (Exception e){
-                        Log.println(Log.ERROR, "Austin", "isaloser");
-                    }
-                    if (rawRes == null) {
-                        Log.println(Log.ERROR, "RawREs", "NULL");
-                    }
-                    else{
-                        Log.println(Log.ERROR, "TEST", "TESTING");
-                    }
-                    Reader r = new InputStreamReader(rawRes);
-                }
+                    PdBase.sendBang("writeStop"); // stop recording otherwise
             }
+        }
         });
 
         // seekbar for volume
@@ -398,7 +370,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     private void startRecording() {
+        /*
         if (recDir == null) {
             record.setChecked(false);
             return;
@@ -408,10 +383,12 @@ public class MainActivity extends AppCompatActivity {
         recFile = new File(recDir, fileName).getAbsolutePath();
         PdBase.sendMessage(TRANSPORT, "scene", recFile);
         PdBase.sendMessage(TRANSPORT, "record", 1);
+        */
         post("Recording...");
     }
 
     private void stopRecording() {
+       /*
         if (recFile == null) return;
         PdBase.sendMessage(TRANSPORT, "record", 0);
         long duration = System.currentTimeMillis() - recStart;
@@ -427,6 +404,7 @@ public class MainActivity extends AppCompatActivity {
         }
         db.addRecording(recFile, recStart, duration, longitude, latitude, recordingId);
         recFile = null;
+        */
         post("Finished recording");
     }
 

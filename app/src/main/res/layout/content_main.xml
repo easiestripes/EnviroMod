@@ -112,17 +112,28 @@
         android:id="@+id/buttonToggleSound"/>
 
     <ToggleButton
-        android:layout_width="match_parent"
+        android:layout_width="567dp"
         android:layout_height="wrap_content"
         android:textOff="@string/button_toggle_off_record"
         android:textOn="@string/button_toggle_on_record"
         android:id="@+id/buttonToggleRecord"/>
 
+    <EditText
+        android:layout_width="564dp"
+        android:layout_height="wrap_content"
+        android:hint="Enter your desired file name (no spaces), then press Record"
+        android:id="@+id/editText"
+        android:inputType="text"
+        android:maxLines="1"
+        android:imeOptions="actionDone"
+        />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:text="@string/button_play"
-        android:id="@+id/buttonPlaySound"/>
+        android:id="@+id/buttonPlaySound"
+        />
 
     <Button
         android:layout_width="match_parent"
@@ -130,7 +141,15 @@
         android:text="@string/button_playRecording"
         android:id="@+id/buttonPlayRecording"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/recordingList"/>
+    </LinearLayout>
 
 </LinearLayout>
+
