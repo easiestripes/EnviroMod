@@ -16,6 +16,7 @@
 
 package cloyster.final_project_cloyster;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Path;
 import android.location.Location;
@@ -39,9 +40,11 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -65,6 +68,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.logging.Logger.global;
 
@@ -97,6 +102,9 @@ public class MainActivity extends AppCompatActivity {
     int fileNum=1;
     EditText editText;
     String title;
+    ListView recordingList;
+    public ArrayAdapter recordList_adapter;
+    ArrayList<String> recordList_files;
 
 
     /**
@@ -165,11 +173,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         setContentView(R.layout.activity_main);
-
         String recDirPath = intent.getStringExtra(RECORDING_PATH);
         recDir = new File(recDirPath != null ? recDirPath : getResources().getString(R.string.recording_folder));
         if (recDir.isFile() || (!recDir.exists() && !recDir.mkdirs())) recDir = null;
-
         AudioParameters.init(this);
         bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);
         initGui();
@@ -209,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected( item );
     }
 
+
     /**
      * Initialises the user interface elements and necessary handlers responsibly for the interaction with the
      * pre-loaded pure data patch. The code is really pure data patch specific.
@@ -229,30 +236,29 @@ public class MainActivity extends AppCompatActivity {
         } );
 
         editText = (EditText)findViewById(R.id.editText);
-        /*editText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    title = editText.getText().toString().trim();
-                    return true;
-                }
-                return false;
+
+        String dir = getFilesDir().getAbsolutePath();
+        File d = new File(dir);
+        String[] allFiles = d.list();
+        recordList_files = new ArrayList<String>();
+        for (int i = 0; i < allFiles.length; i++){
+            if (allFiles[i].contains(".wav")){
+                recordList_files.add(allFiles[i]);
             }
-        });
-        */
+        }
+
+        recordList_adapter = new ArrayAdapter<String>(this, R.layout.recording_list_layout, recordList_files);
+        ListView recordingListView = (ListView) findViewById(R.id.recordingList);
+        recordingListView.setAdapter(recordList_adapter);
 
         // touch to play back recording
         this.btnPlayRecording = (Button) findViewById( R.id.buttonPlayRecording );
         this.btnPlayRecording.setOnTouchListener( new View.OnTouchListener() {
             @Override
             public boolean onTouch( View v, MotionEvent event ) {
-
-                    //PdBase.sendFloat("osc_volume", 0);
-                    String dir = getFilesDir().getAbsolutePath();
+                    PdBase.sendFloat("osc_volume", 0);
                     PdBase.sendSymbol("readFile", title);
-                    PdBase.sendBang("readBang");
                     PdBase.sendBang("readStart");
-                    //fileNum++;
                     return false;
             }
         } );
@@ -279,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged( CompoundButton buttonView, boolean isChecked ) {
                 if (isChecked ) {
-                    title = "hello";
+                    title = "test";
                     title = editText.getText().toString();
                     String dir = getFilesDir().getAbsolutePath();
                     PdBase.sendSymbol("writeFile", title); // open file
@@ -290,10 +296,14 @@ public class MainActivity extends AppCompatActivity {
                     for (int i = 0; i < files.length; i++){
                         post(i + ": " + files[i]);
                     }
-
                 }
                 else {
                     PdBase.sendBang("writeStop"); // stop recording otherwise
+                    String dir = getFilesDir().getAbsolutePath();
+                    File d = new File(dir);
+                    String[] files = d.list();
+                    recordList_files.add(files[files.length-1]);
+                    recordList_adapter.notifyDataSetChanged();
             }
         }
         });
@@ -311,45 +321,40 @@ public class MainActivity extends AppCompatActivity {
                     PdBase.sendFloat( "osc_volume", volume / 100f ); // send volume (0 to 1) if locked
                 }
             }
-
             public void onStartTrackingTouch( SeekBar seekBar ) {}
-
             public void onStopTrackingTouch( SeekBar seekBar ) {}
         } );
 
         // seekbar for carrier frequency
         this.seekbarCarrierFrequency = (SeekBar) findViewById( R.id.seekbarCarrierFrequency );
-        this.seekbarCarrierFrequency.setMax( 100 );
+        this.seekbarCarrierFrequency.setMax( 200 );
         this.seekbarCarrierFrequency.incrementProgressBy( 1 );
         this.seekbarCarrierFrequency.setProgress( 0 );
         this.seekbarCarrierFrequency.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
                 if ( progress == 0 ) progress = 1;
-                float a = progress / 100f;
-                float frequency = (float) ( 2500 * Math.exp( 2.19722 * a ) - 2500 );
+                float a = progress / 200f;
+                float frequency = (float) ( 1000 * Math.exp( 2.19722 * a ) - 1000 );
+                post("frequency: " + frequency);
                 PdBase.sendFloat( "osc_carrier_frequency", frequency );
             }
-
             public void onStartTrackingTouch( SeekBar seekBar ) {}
-
             public void onStopTrackingTouch( SeekBar seekBar ) {}
         } );
 
         // seekbar for modulator frequency
         this.seekbarModulatorFrequency = (SeekBar) findViewById( R.id.seekbarModulatorFrequency );
-        this.seekbarModulatorFrequency.setMax( 20 );
+        this.seekbarModulatorFrequency.setMax( 200 );
         this.seekbarModulatorFrequency.incrementProgressBy( 1 );
         this.seekbarModulatorFrequency.setProgress( 0 );
         this.seekbarModulatorFrequency.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
                 if ( progress == 0 ) progress = 1;
-                float a = progress / 100f;
+                float a = progress / 200f;
                 float frequency = (float) ( 2500 * Math.exp( 2.19722 * a ) - 2500 );
                 PdBase.sendFloat( "osc_modulator_frequency", frequency );
             }
-
             public void onStartTrackingTouch( SeekBar seekBar ) {}
-
             public void onStopTrackingTouch( SeekBar seekBar ) {}
         } );
 
@@ -365,12 +370,9 @@ public class MainActivity extends AppCompatActivity {
                 float depth = (float) ( 2500 * Math.exp( 2.19722 * a ) - 2500 );
                 PdBase.sendFloat( "osc_modulator_depth", depth );
             }
-
             public void onStartTrackingTouch( SeekBar seekBar ) {}
-
             public void onStopTrackingTouch( SeekBar seekBar ) {}
         } );
-
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if ( fab != null ) {
@@ -391,7 +393,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
-
 
     /**
      * Trigger a native Android toast message.
