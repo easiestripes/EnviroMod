@@ -1,3 +1,19 @@
+/*
+ * Libraries Used:
+ * Pure Data for Android (https://github.com/libpd/pd-for-android)
+ * Java Wrapper for SoundCloud API by Birdcage (https://github.com/birdcage/soundcloud-web-api-android)
+ *
+ * *** IMPORTANT NOTE FOR MILESTONE 2 ***
+ * Prof. Sherriff told us this was fine, just to make a note of it in our code.
+ * We are planning to use SoundCloud as our 3rd party web service but recently
+ * they changed their policies on accepting app registration so now the process
+ * a lot longer and none of their api is usable without authentication so therefore
+ * we can't do any of that yet while we wait on approval. But we do have the java
+ * wrapper library fully implemented and working. Also we have modified it to work
+ * for uploading tracks to SoundCloud. Therefore all our SoundCloud related code
+ * should work, or be very close to working, we just can't test it yet to be sure.
+ */
+
 package cloyster.final_project_cloyster;
 
 import android.content.Context;
@@ -34,6 +50,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
 
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdService;
@@ -72,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     ShortBuffer mSamples; // the samples to play
     int mNumSamples; // number of samples to play
     boolean mShouldContinue;
+
     public static final String RECORDING_PATH = "recording_path";
     private File folder;
     private File recDir = null;
@@ -79,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     int fileNum=1;
     EditText editText;
     String title;
+
 
     /**
      * The PdService is provided by the pd-for-android library.
@@ -146,9 +165,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         setContentView(R.layout.activity_main);
+
         String recDirPath = intent.getStringExtra(RECORDING_PATH);
         recDir = new File(recDirPath != null ? recDirPath : getResources().getString(R.string.recording_folder));
         if (recDir.isFile() || (!recDir.exists() && !recDir.mkdirs())) recDir = null;
+
         AudioParameters.init(this);
         bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);
         initGui();
@@ -225,6 +246,7 @@ public class MainActivity extends AppCompatActivity {
         this.btnPlayRecording.setOnTouchListener( new View.OnTouchListener() {
             @Override
             public boolean onTouch( View v, MotionEvent event ) {
+
                     //PdBase.sendFloat("osc_volume", 0);
                     String dir = getFilesDir().getAbsolutePath();
                     PdBase.sendSymbol("readFile", title);
@@ -368,44 +390,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-    }
-
-
-
-    private void startRecording() {
-        /*
-        if (recDir == null) {
-            record.setChecked(false);
-            return;
-        }
-        recStart = System.currentTimeMillis();
-        String fileName = "recording_" + recStart + ".wav";
-        recFile = new File(recDir, fileName).getAbsolutePath();
-        PdBase.sendMessage(TRANSPORT, "scene", recFile);
-        PdBase.sendMessage(TRANSPORT, "record", 1);
-        */
-        post("Recording...");
-    }
-
-    private void stopRecording() {
-       /*
-        if (recFile == null) return;
-        PdBase.sendMessage(TRANSPORT, "record", 0);
-        long duration = System.currentTimeMillis() - recStart;
-        double longitude = 0.0;
-        double latitude = 0.0;
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (locationManager != null) {  // Paranoid?  Maybe...
-            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if (location != null) {
-                longitude = location.getLongitude();
-                latitude = location.getLatitude();
-            }
-        }
-        db.addRecording(recFile, recStart, duration, longitude, latitude, recordingId);
-        recFile = null;
-        */
-        post("Finished recording");
     }
 
 
