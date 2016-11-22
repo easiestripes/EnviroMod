@@ -1,7 +1,10 @@
 /*
  * Libraries Used:
  * Pure Data for Android (https://github.com/libpd/pd-for-android)
- * Java Wrapper for SoundCloud API by Birdcage (https://github.com/birdcage/soundcloud-web-api-android)
+ * Server Upload: http://www.coderefer.com/android-upload-file-to-server/
+ * Location: https://www.learn2crack.com/2015/10/android-marshmallow-permissions.html
+ * Accelerometer: https://code.tutsplus.com/tutorials/using-the-accelerometer-on-android--mobile-22125
+ * Audio Controls: https://github.com/arunkumarsekar/audioControls
  *
  * *** IMPORTANT NOTE FOR MILESTONE 2 ***
  * Prof. Sherriff told us this was fine, just to make a note of it in our code.
@@ -222,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 1, this);
 
         if (checkPermission()) {
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            location = getLoc();
             if (location != null) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
@@ -327,6 +330,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     // GPS
+
+    private Location getLoc() {
+        locationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            if(checkPermission()) {
+                Location l = locationManager.getLastKnownLocation(provider);
+
+                if (l == null) {
+                    continue;
+                }
+                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                    // Found best last known location: %s", l);
+                    bestLocation = l;
+                }
+            }
+        }
+        return bestLocation;
+    }
+
 
     @Override
     public void onLocationChanged(Location location) {
@@ -453,6 +477,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } );
 
         editText = (EditText)findViewById(R.id.editText);
+        if (checkPermission()){
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (location != null) {
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
+
+                Log.i(TAG,"Lat: " + latitude);
+                Log.i(TAG,"Lng: " + longitude);
+
+
+                lat.setText("Latitude: " + latitude);
+                lng.setText("Longitude: " + longitude);
+            }
+
+        }
+        else{
+            requestPermission();
+        }
+
+        post("lat: " + latitude);
+        post("lon: " + longitude);
 
         String dir = getFilesDir().getAbsolutePath();
         File d = new File(dir);
@@ -546,9 +591,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // seekbar for volume
         this.seekbarVolume = (SeekBar) findViewById( R.id.seekbarVolume );
-        this.seekbarVolume.setMax( 20 );
+        this.seekbarVolume.setMax( 100 );
         this.seekbarVolume.incrementProgressBy( 1 );
-        this.seekbarVolume.setProgress( 0 );
+        this.seekbarVolume.setProgress( 10 );
         this.seekbarVolume.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
 
             public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
@@ -568,9 +613,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.seekbarCarrierFrequency.setProgress( 0 );
         this.seekbarCarrierFrequency.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+                int l = (int) latitude;
+                double sub = latitude - l;
+                post("Carr: " + sub);
+                sub = 10000 * sub;
                 if ( progress == 0 ) progress = 1;
                 float a = progress / 200f;
-                float frequency = (float) ( 1000 * Math.exp( 2.19722 * a ) - 1000 );
+                float frequency = (float) ( sub * Math.exp( 2.19722 * a ) - sub );
                 post("frequency: " + frequency);
                 PdBase.sendFloat( "osc_carrier_frequency", frequency );
             }
@@ -585,9 +634,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.seekbarModulatorFrequency.setProgress( 0 );
         this.seekbarModulatorFrequency.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+                int l = (int) longitude;
+                double sub = longitude - l;
+                post("Mod: " + sub);
+                sub = 500 * sub;
                 if ( progress == 0 ) progress = 1;
                 float a = progress / 200f;
-                float frequency = (float) ( 2500 * Math.exp( 2.19722 * a ) - 2500 );
+                float frequency = (float) ( sub * Math.exp( 2.19722 * a ) - sub );
+                post("frequency: " + frequency);
                 PdBase.sendFloat( "osc_modulator_frequency", frequency );
             }
             public void onStartTrackingTouch( SeekBar seekBar ) {}
@@ -596,14 +650,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // seekbar for modulator depth
         this.seekbarModulatorDepth = (SeekBar) findViewById( R.id.seekbarModulatorDepth );
-        this.seekbarModulatorDepth.setMax( 100 );
+        this.seekbarModulatorDepth.setMax( 200 );
         this.seekbarModulatorDepth.incrementProgressBy( 1 );
         this.seekbarModulatorDepth.setProgress( 0 );
         this.seekbarModulatorDepth.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+                int lon = (int) longitude;
+                int lat = (int) latitude;
+                double sLon = longitude - lon;
+                double sLat = latitude - lat;
+                double dep = (sLon + sLat) * 1000;
                 if ( progress == 0 ) progress = 1;
                 float a = progress / 100f;
-                float depth = (float) ( 2500 * Math.exp( 2.19722 * a ) - 2500 );
+                float depth = (float) ( dep * Math.exp( 2.19722 * a ) - dep );
+                post("depth: " + depth);
                 PdBase.sendFloat( "osc_modulator_depth", depth );
             }
             public void onStartTrackingTouch( SeekBar seekBar ) {}
@@ -644,6 +704,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+
+
+
 
 
     //android upload file to server
