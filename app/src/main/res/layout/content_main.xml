@@ -18,36 +18,49 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/heading_1"
+        android:text="New Recording"
         android:id="@+id/textView"
         android:gravity="center_horizontal"
-        android:layout_marginBottom="25dp"/>
+        android:layout_marginBottom="10dp"/>
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp">
-
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="85dp">
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/label_volume"
-            android:id="@+id/textView_mvolume"
-            android:layout_weight="0.25"/>
-
-        <SeekBar
+            android:layout_marginRight="40dp"
+            android:textSize="20sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/seekbarVolume"
-            android:layout_weight="0.75"/>
-    </LinearLayout>
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/switch_am_fm"
+            android:text="AM"/>
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:showText="false"
+            android:id="@+id/switch_am_fm"
+            android:scaleX="2"
+            android:scaleY="2"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"/>
+
+        <TextView
+            android:layout_marginLeft="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="FM"
+            android:layout_toRightOf="@+id/switch_am_fm"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp">
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="center_horizontal">
 
         <TextView
             android:layout_width="0dp"
@@ -56,38 +69,42 @@
             android:id="@+id/textView_carrier_frequency"
             android:layout_weight="0.25"/>
 
-        <SeekBar
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/seekbarCarrierFrequency"
-            android:layout_weight="0.75"/>
+            android:id="@+id/CarrierFrequency"
+            android:text="0.0"
+            android:layout_weight="0.25"/>
     </LinearLayout>
 
     <LinearLayout
     android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp">
+    android:layout_marginBottom="10dp"
+    android:layout_gravity="center_horizontal">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/label_modulator_frequency"
-        android:id="@+id/textView_modulator_frequency"
-        android:layout_weight="0.25"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/label_modulator_frequency"
+            android:id="@+id/textView_modulator_frequency"
+            android:layout_weight="0.25"/>
 
-    <SeekBar
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/seekbarModulatorFrequency"
-        android:layout_weight="0.75"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ModulatorFrequency"
+            android:text="0.0"
+            android:layout_weight="0.25"/>
     </LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp">
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="center_horizontal">
 
         <TextView
             android:layout_width="0dp"
@@ -96,27 +113,29 @@
             android:id="@+id/textView_modulator_depth"
             android:layout_weight="0.25"/>
 
-        <SeekBar
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/seekbarModulatorDepth"
-            android:layout_weight="0.75"/>
+            android:id="@+id/ModulatorDepth"
+            android:text="0.0"
+            android:layout_weight="0.25"
+            android:layout_marginBottom="40dp"/>
     </LinearLayout>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:text="@string/button_play"
+        android:id="@+id/buttonPlaySound"
+        />
 
     <ToggleButton
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:textOff="@string/button_toggle_off_permanant"
         android:textOn="@string/button_toggle_on_permanant"
-        android:id="@+id/buttonToggleSound"/>
-
-    <ToggleButton
-        android:layout_width="567dp"
-        android:layout_height="wrap_content"
-        android:textOff="@string/button_toggle_off_record"
-        android:textOn="@string/button_toggle_on_record"
-        android:id="@+id/buttonToggleRecord"/>
+        android:id="@+id/buttonToggleSound"
+        android:layout_marginBottom="40dp"/>
 
     <EditText
         android:layout_width="564dp"
@@ -128,57 +147,21 @@
         android:imeOptions="actionDone"
         />
 
+    <ToggleButton
+        android:layout_width="567dp"
+        android:layout_height="100dp"
+        android:textOff="@string/button_toggle_off_record"
+        android:textOn="@string/button_toggle_on_record"
+        android:id="@+id/buttonToggleRecord"
+        android:layout_marginBottom="40dp"
+        android:enabled="false"/>
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        android:text="@string/button_play"
-        android:id="@+id/buttonPlaySound"
-        />
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:text="@string/button_playRecording"
-        android:id="@+id/buttonPlayRecording"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/recordingList"/>
-    </LinearLayout>
-
-    <!-- delete all below after implementation/testing -->
-    <Button
-        android:id="@+id/check_permission"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Check Permission"/>
-
-    <Button
-        android:id="@+id/request_permission"
-        android:layout_below="@+id/check_permission"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Request Permission"/>
-
-    <TextView
-        android:id="@+id/lat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/request_permission"
-        android:gravity="center"/>
-
-    <TextView
-        android:id="@+id/lng"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/lat"
-        android:gravity="center"/>
+        android:text="Help"
+        android:id="@+id/main_to_help"
+        android:onClick="openHelp"/>
 
 </LinearLayout>
 

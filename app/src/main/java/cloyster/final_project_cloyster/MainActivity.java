@@ -5,6 +5,8 @@
  * Location: https://www.learn2crack.com/2015/10/android-marshmallow-permissions.html
  * Accelerometer: https://code.tutsplus.com/tutorials/using-the-accelerometer-on-android--mobile-22125
  * Audio Controls: https://github.com/arunkumarsekar/audioControls
+ * AM/FM Image: http://www-tc.pbs.org/wgbh/aso/tryit/radio/images/fmamcompare.gif
+ * Gif library: https://github.com/koral--/android-gif-drawable
  *
  * *** IMPORTANT NOTE FOR MILESTONE 2 ***
  * Prof. Sherriff told us this was fine, just to make a note of it in our code.
@@ -18,23 +20,13 @@
  */
 
 package cloyster.final_project_cloyster;
-
-
-import android.app.Activity;
-
 import android.Manifest;
 import android.app.ProgressDialog;
-
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Path;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.AudioAttributes;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -43,22 +35,16 @@ import android.os.Bundle;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.net.Uri;
 import android.os.IBinder;
-import android.support.design.widget.FloatingActionButton;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -66,14 +52,13 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-
+import android.widget.Switch;
 
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdService;
 import org.puredata.android.utils.PdUiDispatcher;
 import org.puredata.core.PdBase;
 import org.puredata.core.utils.IoUtils;
-import org.puredata.*;
 
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -81,79 +66,64 @@ import java.io.FileNotFoundException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.ShortBuffer;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.logging.Logger.global;
-
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, LocationListener, SensorEventListener {
+public class MainActivity extends AppCompatActivity implements LocationListener, SensorEventListener {
 
     Button btnPlaySound;
     ToggleButton btnToggleSound;
-    SeekBar seekbarCarrierFrequency;
-    SeekBar seekbarVolume;
-    SeekBar seekbarModulatorFrequency;
-    SeekBar seekbarModulatorDepth;
     ToggleButton btnRecord;
-    Button btnPlayRecording;
-    private ToggleButton record;
-    private long recStart;
-    private String recFile = null;
-    private static final String TRANSPORT = "#transport";
-    private RecordDataBase db;
-    private long recordingId;
-    AudioTrack audioTrack;
-    ShortBuffer mSamples; // the samples to play
-    int mNumSamples; // number of samples to play
-    boolean mShouldContinue;
+    Switch switch_am_fm;
+    TextView ModulatorFrequency;
+    TextView ModulatorDepth;
+    TextView CarrierFrequency;
+    Button help;
+
+    float am_volume = 15/100f;
+    float fm_volume = 15/100f;
+    double carrierMin = 220.0;
+    double carrierMax = 2000.0;
+    double modulatorMin = 0.0;
+    double modulatorMax = 2000.0;
+    double amModMax = 40.0;
+    float amDepthLimit = .5f;
+    float fmDepthLimit = 50f;
+    int lat = 0;
+    int lon = 0;
+    double subC = 0.0;
+    double subM = 0.0;
+    double dep = 0.0;
+
 
     public static final String RECORDING_PATH = "recording_path";
-    private File folder;
     private File recDir = null;
-    private String refFile = null;
-    int fileNum=1;
     EditText editText;
     String title;
-    ListView recordingList;
     public ArrayAdapter recordList_adapter;
     ArrayList<String> recordList_files;
 
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
     private LocationManager locationManager;
-    private int MY_PERMISSION_ACCESS_FINE_LOCATION;
     private static final int PERMISSION_REQUEST_CODE = 1;
-    private static final int PICK_FILE_REQUEST = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
     private String selectedFilePath;
     private String SERVER_URL = "http://www.austinpetrie.com/enviromod/UploadToServer.php";
-    TextView browseFiles, lat, lng;
-    Button bUpload, check_permission, request_permission;
-    TextView tvFileName;
+
     ProgressDialog dialog;
     Location location;
     double latitude;
     double longitude;
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 600;
-
 
     /**
      * The PdService is provided by the pd-for-android library.
      */
     private PdService pdService = null;
-
-    /**
-     * The volume value as integer from 0 to 100 percent
-     */
-    int volume = 0;
 
     /**
      * Initialises the pure data service for playing audio and receiving control commands.
@@ -208,20 +178,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         setContentView(R.layout.activity_main);
 
         // GPS
-        check_permission = (Button)findViewById(R.id.check_permission);
-        request_permission = (Button)findViewById(R.id.request_permission);
-        check_permission.setOnClickListener(this);
-        request_permission.setOnClickListener(this);
-        lat = (TextView) findViewById(R.id.lat);
-        lng = (TextView) findViewById(R.id.lng);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 1, this);
 
         if (checkPermission()) {
@@ -229,9 +193,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (location != null) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
-
-                lat.setText("Latitude: " + latitude);
-                lng.setText("Longitude: " + longitude);
+                lat = (int) latitude;
+                lon = (int) longitude;
+                subC = Math.abs(latitude - lat);
+                subM = Math.abs(longitude - lon);
+                dep = (subC + subM);
             }
         }
 
@@ -260,34 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu( Menu menu ) {
-        getMenuInflater().inflate(R.menu.menu_main, menu );
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected( MenuItem item ) {
-        int id = item.getItemId();
-
-        if ( id == R.id.action_link ) {
-            Intent browserIntent = new Intent( Intent.ACTION_VIEW, Uri.parse( "http://www.journal.deviantdev.com/example-libpd-android-studio/" ) );
-            startActivity( browserIntent );
-            return true;
-        }
-
-        if ( id == R.id.action_exit ) {
-            moveTaskToBack( true );
-            return true;
-        }
-
-        return super.onOptionsItemSelected( item );
-    }
-
-
-
     // Sensor
-
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor mySensor = event.sensor;
@@ -303,20 +242,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 long diffTime = (curTime - lastUpdate);
                 lastUpdate = curTime;
 
-                float speed = Math.abs(x + y + z - last_x - last_y - last_z)/ diffTime * 10000;
-                if (speed > SHAKE_THRESHOLD) {
-
-                }
                 last_x = x;
                 last_y = y;
                 last_z = z;
+
+                float carFrequency = (float) (Math.abs(carrierMax*subC*last_x) + carrierMin);
+                float fmModFrequency = (float) (Math.abs(modulatorMax*subM*last_y) + modulatorMin);
+                float amModFrequency = (float) (Math.abs(amModMax*subM*last_y) + modulatorMin);
+
+                float amDepth = (float) Math.abs(dep*amDepthLimit*last_z);
+                float fmDepth = (float) Math.abs(dep*fmDepthLimit*last_z);
+
+                if (switch_am_fm.isChecked()){
+                    PdBase.sendFloat( "fm_carrier_frequency", carFrequency);
+                    PdBase.sendFloat( "fm_modulator_frequency", fmModFrequency );
+                    PdBase.sendFloat( "fm_modulator_depth", fmDepth );
+                    CarrierFrequency.setText("" + carFrequency);
+                    ModulatorFrequency.setText("" + fmModFrequency);
+                    ModulatorDepth.setText("" + fmDepth);
+                }
+                else {
+                    PdBase.sendFloat( "am_carrier_frequency", carFrequency);
+                    PdBase.sendFloat( "am_modulator_frequency", amModFrequency );
+                    PdBase.sendFloat( "am_modulator_depth", amDepth );
+                    CarrierFrequency.setText("" + carFrequency);
+                    ModulatorFrequency.setText("" + amModFrequency);
+                    ModulatorDepth.setText("" + amDepth);
+                }
             }
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
 
     protected void onPause() {
@@ -330,7 +288,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     // GPS
-
     private Location getLoc() {
         locationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
         List<String> providers = locationManager.getProviders(true);
@@ -354,11 +311,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLocationChanged(Location location) {
-        lat.setText("" + location.getLatitude());
-        lng.setText("" + location.getLongitude());
-
         String msg = "New Latitude: " + location.getLatitude()
                 + "New Longitude: " + location.getLongitude();
+
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+        lat = (int) latitude;
+        lon = (int) longitude;
+        subC = Math.abs(latitude - lat);
+        subM = Math.abs(longitude - lon);
+        dep = (subC + subM);
 
         Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
     }
@@ -414,45 +376,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if(v == check_permission) {
-            if (checkPermission()) {
-                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-                /*latitude = location.getLatitude();
-                longitude = location.getLongitude();
-
-                Log.i(TAG,"Lat: " + latitude);
-                Log.i(TAG,"Lng: " + longitude);*/
-                if (location != null) {
-                    latitude = location.getLatitude();
-                    longitude = location.getLongitude();
-
-                    Log.i(TAG,"Lat: " + latitude);
-                    Log.i(TAG,"Lng: " + longitude);
-
-
-                    lat.setText("Latitude: " + latitude);
-                    lng.setText("Longitude: " + longitude);
-                }
-
-                Toast.makeText(getBaseContext(), "Permission already granted.",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getBaseContext(), "Please request permission.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        if(v == request_permission) {
-            if (!checkPermission()) {
-                requestPermission();
-            } else {
-                Toast.makeText(getBaseContext(), "Permission already granted.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        }
+    public void openHelp(View v){
+        Intent i = new Intent(MainActivity.this, Help.class);
+        startActivity(i);
     }
 
     // PD
@@ -462,21 +389,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * pre-loaded pure data patch. The code is really pure data patch specific.
      */
     private void initGui() {
+
+        this.ModulatorDepth = (TextView) findViewById(R.id.ModulatorDepth);
+        this.ModulatorFrequency = (TextView) findViewById(R.id.ModulatorFrequency);
+        this.CarrierFrequency = (TextView) findViewById(R.id.CarrierFrequency);
+
+        PdBase.sendFloat("am_volume", am_volume);
+        PdBase.sendFloat("fm_volume", fm_volume);
+
+        this.switch_am_fm = (Switch) findViewById(R.id.switch_am_fm);
+        this.switch_am_fm.setChecked(false);
+
+        this.switch_am_fm.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (btnToggleSound.isChecked()) {
+                    if (isChecked) {
+                        PdBase.sendFloat("am_volume", 0);
+                        PdBase.sendFloat("fm_volume", fm_volume);
+                    } else {
+                        PdBase.sendFloat("fm_volume", 0);
+                        PdBase.sendFloat("am_volume", am_volume);
+                    }
+                }
+            }
+        });
+
         // touch to play button
         this.btnPlaySound = (Button) findViewById( R.id.buttonPlaySound );
         this.btnPlaySound.setOnTouchListener( new View.OnTouchListener() {
             @Override
             public boolean onTouch( View v, MotionEvent event ) {
                 if ( event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    PdBase.sendFloat( "osc_volume", volume / 100f ); // send volume (0 to 1)
+                    if (switch_am_fm.isChecked()){
+                        PdBase.sendFloat( "fm_volume", fm_volume ); // send volume (0 to 1)
+                    }
+                    else{
+                        PdBase.sendFloat( "am_volume", am_volume  ); // send volume (0 to 1)
+                    }
+
                 } else if ( event.getAction() == MotionEvent.ACTION_UP ) {
-                    PdBase.sendFloat( "osc_volume", 0 ); // quiet down
+                        PdBase.sendFloat( "fm_volume", 0 ); // quiet down
+                        PdBase.sendFloat("am_volume", 0); // quiet down
                 }
                 return false;
             }
         } );
 
         editText = (EditText)findViewById(R.id.editText);
+        editText.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+                if(s.length() != 0){
+                    btnRecord.setEnabled(true);
+                }
+                else{
+                    btnRecord.setEnabled(false);
+                }
+            }
+        });
+
         if (checkPermission()){
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (location != null) {
@@ -485,19 +466,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 Log.i(TAG,"Lat: " + latitude);
                 Log.i(TAG,"Lng: " + longitude);
-
-
-                lat.setText("Latitude: " + latitude);
-                lng.setText("Longitude: " + longitude);
             }
-
         }
         else{
             requestPermission();
         }
-
-        post("lat: " + latitude);
-        post("lon: " + longitude);
 
         String dir = getFilesDir().getAbsolutePath();
         File d = new File(dir);
@@ -510,33 +483,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         recordList_adapter = new ArrayAdapter<String>(this, R.layout.recording_list_layout, recordList_files);
-        ListView recordingListView = (ListView) findViewById(R.id.recordingList);
-        recordingListView.setAdapter(recordList_adapter);
-
-        // touch to play back recording
-        this.btnPlayRecording = (Button) findViewById( R.id.buttonPlayRecording );
-        this.btnPlayRecording.setOnTouchListener( new View.OnTouchListener() {
-            @Override
-            public boolean onTouch( View v, MotionEvent event ) {
-                    PdBase.sendFloat("osc_volume", 0);
-                    PdBase.sendSymbol("readFile", title);
-                    PdBase.sendBang("readStart");
-                    return false;
-            }
-        } );
 
         // toggle play button
         this.btnToggleSound = (ToggleButton) findViewById( R.id.buttonToggleSound );
         this.btnToggleSound.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged( CompoundButton buttonView, boolean isChecked ) {
-
                 if ( btnPlaySound.isEnabled() ) {
                     btnPlaySound.setEnabled( false );
-                    PdBase.sendFloat( "osc_volume", volume / 100f ); // enable volume while locked
+                    if(switch_am_fm.isChecked()){
+                        PdBase.sendFloat( "fm_volume", fm_volume ); // enable volume while locked
+                    }
+                    else{
+                        PdBase.sendFloat("am_volume", am_volume );
+                    }
+
                 } else {
                     btnPlaySound.setEnabled( true );
-                    PdBase.sendFloat( "osc_volume", 0 ); // quiet down for after unlock
+                        PdBase.sendFloat( "fm_volume", 0 ); // quiet down for after unlock
+                        PdBase.sendFloat("am_volume", 0);
                 }
             }
         } );
@@ -547,17 +512,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCheckedChanged( CompoundButton buttonView, boolean isChecked ) {
                 if (isChecked ) {
-                    title = "test";
-                    title = editText.getText().toString();
-                    String dir = getFilesDir().getAbsolutePath();
-                    PdBase.sendSymbol("writeFile", title); // open file
-                    PdBase.sendBang("writeStart");
-                    File d = new File(dir);
-                    String[] files = d.list();
-                    post(dir);
-                    for (int i = 0; i < files.length; i++){
-                        post(i + ": " + files[i]);
-                    }
+                        title = "test";
+                        title = editText.getText().toString();
+                        String dir = getFilesDir().getAbsolutePath();
+                        PdBase.sendSymbol("writeFile", title); // open file
+                        PdBase.sendBang("writeStart");
+                        File d = new File(dir);
+                        String[] files = d.list();
+                        post(dir);
+                        for (int i = 0; i < files.length; i++) {
+                            post(i + ": " + files[i]);
+                        }
                 }
                 else {
                     PdBase.sendBang("writeStop"); // stop recording otherwise
@@ -567,6 +532,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     String[] files = d.list();
                     recordList_files.add(files[files.length-1]);
                     recordList_adapter.notifyDataSetChanged();
+                    editText.setText("");
 
                     // Upload file to web server
 
@@ -582,112 +548,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 uploadFile(selectedFilePath);
                             }
                         }).start();
+                        toast("Upload Complete!");
                     } else {
                         Toast.makeText(MainActivity.this,"Please choose a File First",Toast.LENGTH_SHORT).show();
                     }
             }
         }
         });
-
-        // seekbar for volume
-        this.seekbarVolume = (SeekBar) findViewById( R.id.seekbarVolume );
-        this.seekbarVolume.setMax( 100 );
-        this.seekbarVolume.incrementProgressBy( 1 );
-        this.seekbarVolume.setProgress( 10 );
-        this.seekbarVolume.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
-
-            public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-                volume = progress;
-                if ( btnToggleSound.isChecked() ) {
-                    PdBase.sendFloat( "osc_volume", volume / 100f ); // send volume (0 to 1) if locked
-                }
-            }
-            public void onStartTrackingTouch( SeekBar seekBar ) {}
-            public void onStopTrackingTouch( SeekBar seekBar ) {}
-        } );
-
-        // seekbar for carrier frequency
-        this.seekbarCarrierFrequency = (SeekBar) findViewById( R.id.seekbarCarrierFrequency );
-        this.seekbarCarrierFrequency.setMax( 200 );
-        this.seekbarCarrierFrequency.incrementProgressBy( 1 );
-        this.seekbarCarrierFrequency.setProgress( 0 );
-        this.seekbarCarrierFrequency.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-                int l = (int) latitude;
-                double sub = latitude - l;
-                post("Carr: " + sub);
-                sub = 10000 * sub;
-                if ( progress == 0 ) progress = 1;
-                float a = progress / 200f;
-                float frequency = (float) ( sub * Math.exp( 2.19722 * a ) - sub );
-                post("frequency: " + frequency);
-                PdBase.sendFloat( "osc_carrier_frequency", frequency );
-            }
-            public void onStartTrackingTouch( SeekBar seekBar ) {}
-            public void onStopTrackingTouch( SeekBar seekBar ) {}
-        } );
-
-        // seekbar for modulator frequency
-        this.seekbarModulatorFrequency = (SeekBar) findViewById( R.id.seekbarModulatorFrequency );
-        this.seekbarModulatorFrequency.setMax( 200 );
-        this.seekbarModulatorFrequency.incrementProgressBy( 1 );
-        this.seekbarModulatorFrequency.setProgress( 0 );
-        this.seekbarModulatorFrequency.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-                int l = (int) longitude;
-                double sub = longitude - l;
-                post("Mod: " + sub);
-                sub = 500 * sub;
-                if ( progress == 0 ) progress = 1;
-                float a = progress / 200f;
-                float frequency = (float) ( sub * Math.exp( 2.19722 * a ) - sub );
-                post("frequency: " + frequency);
-                PdBase.sendFloat( "osc_modulator_frequency", frequency );
-            }
-            public void onStartTrackingTouch( SeekBar seekBar ) {}
-            public void onStopTrackingTouch( SeekBar seekBar ) {}
-        } );
-
-        // seekbar for modulator depth
-        this.seekbarModulatorDepth = (SeekBar) findViewById( R.id.seekbarModulatorDepth );
-        this.seekbarModulatorDepth.setMax( 200 );
-        this.seekbarModulatorDepth.incrementProgressBy( 1 );
-        this.seekbarModulatorDepth.setProgress( 0 );
-        this.seekbarModulatorDepth.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-                int lon = (int) longitude;
-                int lat = (int) latitude;
-                double sLon = longitude - lon;
-                double sLat = latitude - lat;
-                double dep = (sLon + sLat) * 1000;
-                if ( progress == 0 ) progress = 1;
-                float a = progress / 100f;
-                float depth = (float) ( dep * Math.exp( 2.19722 * a ) - dep );
-                post("depth: " + depth);
-                PdBase.sendFloat( "osc_modulator_depth", depth );
-            }
-            public void onStartTrackingTouch( SeekBar seekBar ) {}
-            public void onStopTrackingTouch( SeekBar seekBar ) {}
-        } );
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if ( fab != null ) {
-            fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setType("message/rfc822");
-                    i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"contact@deviantdev.com"});
-                    i.putExtra( Intent.EXTRA_SUBJECT, "Mail to the Author...");
-                    i.putExtra(Intent.EXTRA_TEXT   , "Thanks for all the fish!");
-                    try {
-                        startActivity(Intent.createChooser(i, "Send mail..."));
-                    } catch (android.content.ActivityNotFoundException ex) {
-                        Toast.makeText(MainActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
     }
 
     /**
@@ -698,15 +565,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast toast = Toast.makeText(getApplicationContext(), "", Toast.LENGTH_SHORT);
-                toast.setText(TAG + ": " + text);
+                Toast toast = Toast.makeText(getApplicationContext(), "", Toast.LENGTH_LONG);
+                toast.setText(text);
                 toast.show();
             }
         });
     }
-
-
-
 
 
     //android upload file to server

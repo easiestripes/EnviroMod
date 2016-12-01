@@ -8,7 +8,7 @@
     <string name="label_volume">Volume</string>
     <string name="label_carrier_frequency">Carrier Frequency</string>
     <string name="label_modulator_frequency">Modulator Frequency</string>
-    <string name="label_modulator_depth">Modulator Depth</string>
+    <string name="label_modulator_depth">Modulator Depth (Amplitude)</string>
     <string name="recording_folder">/sdcard/pd</string>
     <string name="button_play">Play Sound on Hold</string>
     <string name="button_toggle_off_permanant">Permanent Sound: Off</string>
@@ -16,5 +16,7 @@
     <string name="button_toggle_off_record">Record</string>
     <string name="button_toggle_on_record">Stop</string>
     <string name="button_playRecording">Play Recording</string>
-
+    <string name="switch_am">AM</string>
+    <string name="switch_fm">FM</string>
+    <string name="title_activity_help">Help</string>
 </resources>
