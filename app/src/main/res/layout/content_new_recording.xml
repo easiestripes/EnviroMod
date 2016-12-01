@@ -10,22 +10,47 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_main"
-    tools:context="cloyster.final_project_cloyster.MainActivity"
+    tools:showIn="@layout/activity_new_recording"
+    tools:context="cloyster.final_project_cloyster.NewRecording"
     android:orientation="vertical">
 
-    <TextView
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="New Recording"
-        android:id="@+id/textView"
-        android:gravity="center_horizontal"
-        android:layout_marginBottom="10dp"/>
+        android:layout_height="wrap_content">
+
+        <!-- Top Bar -->
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:id="@+id/back_button"
+            android:src="@drawable/back"
+            android:background="@null"
+            android:onClick="back" />
+
+        <TextView
+            android:text="New Recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/back_button"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/activity_title"
+            android:textSize="60sp"
+            android:layout_centerHorizontal="true" />
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:layout_below="@+id/activity_title"
+            android:id="@+id/h_line_1"
+            android:background="#c0c0c0" />
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="85dp">
+
         <TextView
             android:layout_marginRight="40dp"
             android:textSize="20sp"
@@ -33,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/switch_am_fm"
-            android:text="AM"/>
+            android:text="AM" />
 
         <Switch
             android:layout_width="wrap_content"
@@ -43,7 +68,7 @@
             android:scaleX="2"
             android:scaleY="2"
             android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"/>
+            android:layout_centerVertical="true" />
 
         <TextView
             android:layout_marginLeft="40dp"
@@ -52,7 +77,8 @@
             android:textSize="20sp"
             android:text="FM"
             android:layout_toRightOf="@+id/switch_am_fm"
-            android:layout_centerVertical="true"/>
+            android:layout_centerVertical="true" />
+
     </RelativeLayout>
 
     <LinearLayout
@@ -67,36 +93,38 @@
             android:layout_height="wrap_content"
             android:text="@string/label_carrier_frequency"
             android:id="@+id/textView_carrier_frequency"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/CarrierFrequency"
             android:text="0.0"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25" />
+
     </LinearLayout>
 
     <LinearLayout
-    android:orientation="horizontal"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    android:layout_gravity="center_horizontal">
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="center_horizontal">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/label_modulator_frequency"
             android:id="@+id/textView_modulator_frequency"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/ModulatorFrequency"
             android:text="0.0"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -111,7 +139,7 @@
             android:layout_height="wrap_content"
             android:text="@string/label_modulator_depth"
             android:id="@+id/textView_modulator_depth"
-            android:layout_weight="0.25"/>
+            android:layout_weight="0.25" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -119,15 +147,15 @@
             android:id="@+id/ModulatorDepth"
             android:text="0.0"
             android:layout_weight="0.25"
-            android:layout_marginBottom="40dp"/>
+            android:layout_marginBottom="40dp" />
+
     </LinearLayout>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:text="@string/button_play"
-        android:id="@+id/buttonPlaySound"
-        />
+        android:id="@+id/buttonPlaySound" />
 
     <ToggleButton
         android:layout_width="match_parent"
@@ -135,7 +163,7 @@
         android:textOff="@string/button_toggle_off_permanant"
         android:textOn="@string/button_toggle_on_permanant"
         android:id="@+id/buttonToggleSound"
-        android:layout_marginBottom="40dp"/>
+        android:layout_marginBottom="40dp" />
 
     <EditText
         android:layout_width="564dp"
@@ -144,8 +172,7 @@
         android:id="@+id/editText"
         android:inputType="text"
         android:maxLines="1"
-        android:imeOptions="actionDone"
-        />
+        android:imeOptions="actionDone" />
 
     <ToggleButton
         android:layout_width="567dp"
@@ -154,14 +181,13 @@
         android:textOn="@string/button_toggle_on_record"
         android:id="@+id/buttonToggleRecord"
         android:layout_marginBottom="40dp"
-        android:enabled="false"/>
+        android:enabled="false" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:text="Help"
-        android:id="@+id/main_to_help"
-        android:onClick="openHelp"/>
+        android:id="@+id/openHelp"
+        android:onClick="openHelp" />
 
 </LinearLayout>
-

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pure Data Sample Project</string>
-    <string name="action_link">About</string>
-    <string name="action_exit">Exit</string>
+    <string name="app_name">EnviroMod</string>
+    <string name="title_activity_new_recording">NewRecording</string>
+    <string name="title_activity_saved_recordings">SavedRecordings</string>
+    <string name="title_activity_help">Help</string>
 
     <string name="heading_1">Adjust the parameters!</string>
     <string name="label_volume">Volume</string>
@@ -18,5 +19,4 @@
     <string name="button_playRecording">Play Recording</string>
     <string name="switch_am">AM</string>
     <string name="switch_fm">FM</string>
-    <string name="title_activity_help">Help</string>
 </resources>

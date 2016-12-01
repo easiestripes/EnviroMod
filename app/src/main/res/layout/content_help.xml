@@ -14,38 +14,58 @@
     tools:context="cloyster.final_project_cloyster.Help"
     tools:showIn="@layout/activity_help">
 
+    <!-- Top Bar -->
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:id="@+id/back_button"
+        android:src="@drawable/back"
+        android:background="@null"
+        android:onClick="back" />
+
+    <TextView
+        android:text="Help"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/back_button"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/activity_title"
+        android:textSize="60sp"
+        android:layout_centerHorizontal="true" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:layout_below="@+id/activity_title"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/h_line_1"
+        android:background="#c0c0c0"/>
 
     <ScrollView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/h_line_1">
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Home"
-                android:id="@+id/help_to_home"
-                android:layout_marginBottom="10dp"
-                />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/help_to_home"
                 android:id="@+id/helpFile"
-                android:textSize="20dp"/>
+                android:textSize="20dp" />
 
             <pl.droidsonroids.gif.GifImageView
                 android:layout_width="450dp"
                 android:layout_height="450dp"
                 android:layout_centerHorizontal="true"
                 android:src="@drawable/am_fm_waves"
-                android:layout_below="@+id/helpFile"
-                />
+                android:layout_below="@+id/helpFile" />
 
         </RelativeLayout>
 
     </ScrollView>
-
 
 </RelativeLayout>
