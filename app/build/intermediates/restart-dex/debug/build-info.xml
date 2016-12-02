@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<instant-run
+    abi="armeabi-v7a,armeabi"
+    api-level="23"
+    density="xhdpi"
+    format="8"
+    plugin-version="2.2.2"
+    timestamp="105459230603022"
+    token="2238536555391303865"
+    verifier="FULL_BUILD_REQUESTED" >
+
+    <task
+        name="javac"
+        duration="166" />
+    <task
+        name="instant-run-dex"
+        duration="0" />
+    <task
+        name="instant-run-transform"
+        duration="141" />
+    <task
+        name="verifier"
+        duration="35" />
+
+    <artifact
+        location="/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/outputs/apk/app-debug.apk"
+        type="MAIN" />
+
+    <build
+        timestamp="105459230603022"
+        verifier="FULL_BUILD_REQUESTED" >
+        <artifact
+            location="/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/outputs/apk/app-debug.apk"
+            type="MAIN" />
+    </build>
+
+</instant-run>

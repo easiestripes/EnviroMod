@@ -1,0 +1,50 @@
+Applications Memory Usage (kB):
+Uptime: 12897143 Realtime: 12919672
+
+** MEMINFO in pid 3803 [cloyster.final_project_cloyster] **
+                   Pss  Private  Private  Swapped     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------
+  Native Heap     4777     4720        0        0     9728     7115     2612
+  Dalvik Heap     4474     4360        0        0    13574    10834     2740
+ Dalvik Other      738      736        0        0                           
+        Stack      188      188        0        0                           
+       Ashmem        4        0        0        0                           
+      Gfx dev     3022     2780        0        0                           
+    Other dev        5        0        4        0                           
+     .so mmap     2039      172      680        0                           
+    .apk mmap      180        0       20        0                           
+    .ttf mmap       32        0        0        0                           
+    .dex mmap     3584      120     3464        0                           
+    .oat mmap     1262        0       92        0                           
+    .art mmap     1100      768        0        0                           
+   Other mmap       16        8        0        0                           
+   EGL mtrack    39040    39040        0        0                           
+      Unknown      229      228        0        0                           
+        TOTAL    60690    53120     4260        0    23302    17949     5352
+ 
+ App Summary
+                       Pss(KB)
+                        ------
+           Java Heap:     5128
+         Native Heap:     4720
+                Code:     4548
+               Stack:      188
+            Graphics:    41820
+       Private Other:      976
+              System:     3310
+ 
+               TOTAL:    60690      TOTAL SWAP (KB):        0
+ 
+ Objects
+               Views:       35         ViewRootImpl:        1
+         AppContexts:        3           Activities:        1
+              Assets:        2        AssetManagers:        2
+       Local Binders:       11        Proxy Binders:       18
+       Parcel memory:        3         Parcel count:       12
+    Death Recipients:        0      OpenSSL Sockets:        0
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+ 
