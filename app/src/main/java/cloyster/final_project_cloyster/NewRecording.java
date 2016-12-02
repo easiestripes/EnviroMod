@@ -175,11 +175,11 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
 
         // GPS
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 1, this);
-
         if (checkPermission()) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 1, this);
             location = getLoc();
+
             if (location != null) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
@@ -189,6 +189,9 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
                 subM = Math.abs(longitude - lon);
                 dep = (subC + subM);
             }
+        }
+        else{
+            requestPermission();
         }
 
         // Sensor
@@ -205,7 +208,7 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
         recDir = new File(recDirPath != null ? recDirPath : getResources().getString(R.string.recording_folder));
         if (recDir.isFile() || (!recDir.exists() && !recDir.mkdirs())) recDir = null;
         AudioParameters.init(this);
-        //bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);
+        bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);
         initGui();
     }
 
@@ -250,7 +253,7 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
                 float amDepth = (float) Math.abs(dep*amDepthLimit*last_z);
                 float fmDepth = (float) Math.abs(dep*fmDepthLimit*last_z);
 
-                /*if (switch_am_fm.isChecked()){
+                if (switch_am_fm.isChecked()){
                     PdBase.sendFloat( "fm_carrier_frequency", carFrequency);
                     PdBase.sendFloat( "fm_modulator_frequency", fmModFrequency );
                     PdBase.sendFloat( "fm_modulator_depth", fmDepth );
@@ -264,7 +267,7 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
                     CarrierFrequency.setText("" + carFrequency);
                     ModulatorFrequency.setText("" + amModFrequency);
                     ModulatorDepth.setText("" + amDepth);
-                }*/
+                }
             }
         }
     }
@@ -301,6 +304,7 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
                 }
             }
         }
+
         return bestLocation;
     }
 
@@ -384,6 +388,30 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
      */
     private void initGui() {
 
+        if (checkPermission()) {
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (location != null) {
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
+
+                Log.i(TAG,"Lat: " + latitude);
+                Log.i(TAG,"Lng: " + longitude);
+
+                if (location != null) {
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+                    lat = (int) latitude;
+                    lon = (int) longitude;
+                    subC = Math.abs(latitude - lat);
+                    subM = Math.abs(longitude - lon);
+                    dep = (subC + subM);
+                }
+            }
+        } else {
+            requestPermission();
+        }
+
+
         this.ModulatorDepth = (TextView) findViewById(R.id.ModulatorDepth);
         this.ModulatorFrequency = (TextView) findViewById(R.id.ModulatorFrequency);
         this.CarrierFrequency = (TextView) findViewById(R.id.CarrierFrequency);
@@ -452,18 +480,6 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
             }
         });
 
-        if (checkPermission()) {
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (location != null) {
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
-
-                Log.i(TAG,"Lat: " + latitude);
-                Log.i(TAG,"Lng: " + longitude);
-            }
-        } else {
-            requestPermission();
-        }
 
         String dir = getFilesDir().getAbsolutePath();
         File d = new File(dir);

@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,46 +51,6 @@ public class SavedRecordings extends AppCompatActivity {
         seekbar = (SeekBar)findViewById(R.id.seekBar);
         seekbar.setClickable(false);
 
-        play.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    play.setBackgroundResource(R.drawable.play);
-                } else {
-                    play();
-                }
-            }
-        });
-
-        forward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int temp = (int)startTime;
-
-                if((temp+forwardTime)<=finalTime){
-                    startTime = startTime + forwardTime;
-                    mediaPlayer.seekTo((int) startTime);
-                }else{
-                    // can't jump forward 5 seconds
-                }
-            }
-        });
-
-        backward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int temp = (int)startTime;
-
-                if((temp-backwardTime)>0){
-                    startTime = startTime - backwardTime;
-                    mediaPlayer.seekTo((int) startTime);
-                }else{
-                    // can't jump backward 5 seconds
-                }
-            }
-        });
-
         // recording list
         String dir = getFilesDir().getAbsolutePath();
         File d = new File(dir);
@@ -125,7 +86,61 @@ public class SavedRecordings extends AppCompatActivity {
         } else {
             mediaPlayer = null;
         }
+
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            if (mediaPlayer != null) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    play.setBackgroundResource(R.drawable.play);
+                } else {
+                    if (recordList_files.size() > 0) {
+                        play();
+                    }
+                    else{
+                        Toast.makeText(SavedRecordings.this, "No recordings yet, Go back to New Recording and make some sound!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+                else{
+                Toast.makeText(SavedRecordings.this, "No recordings yet, Go back to New Recording and make some sound!", Toast.LENGTH_SHORT).show();
+
+            }
+            }
+        });
+
+        forward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int temp = (int)startTime;
+
+                if((temp+forwardTime)<=finalTime){
+                    startTime = startTime + forwardTime;
+                    mediaPlayer.seekTo((int) startTime);
+                }else{
+                    // can't jump forward 5 seconds
+                }
+            }
+        });
+
+        backward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int temp = (int)startTime;
+
+                if((temp-backwardTime)>0){
+                    startTime = startTime - backwardTime;
+                    mediaPlayer.seekTo((int) startTime);
+                }else{
+                    // can't jump backward 5 seconds
+                }
+            }
+        });
+
     }
+
+
 
     public void back(View v) {
         finish();

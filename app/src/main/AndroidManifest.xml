@@ -33,7 +33,8 @@
             android:name=".NewRecording"
             android:parentActivityName=".MainActivity"
             android:label="@string/title_activity_new_recording"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            android:screenOrientation="portrait">
             <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
