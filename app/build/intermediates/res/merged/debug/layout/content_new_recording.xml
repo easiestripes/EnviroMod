@@ -169,7 +169,7 @@
     <EditText
         android:layout_width="564dp"
         android:layout_height="wrap_content"
-        android:hint="Enter your desired file name (no spaces), then press Record"
+        android:hint="Enter your desired file name, then press Record"
         android:id="@+id/editText"
         android:inputType="text"
         android:maxLines="1"

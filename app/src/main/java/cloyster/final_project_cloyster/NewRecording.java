@@ -556,7 +556,6 @@ public class NewRecording extends AppCompatActivity implements LocationListener,
                         uploadFile(selectedFilePath);
                         }
                     }).start();
-                    toast("Upload Complete!");
                 } else {
                     Toast.makeText(NewRecording.this,"Please choose a File First",Toast.LENGTH_SHORT).show();
                 }

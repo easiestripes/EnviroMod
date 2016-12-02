@@ -5,29 +5,29 @@
     density="xhdpi"
     format="8"
     plugin-version="2.2.2"
-    timestamp="105459230603022"
+    timestamp="112409903594938"
     token="2238536555391303865"
     verifier="FULL_BUILD_REQUESTED" >
 
     <task
         name="javac"
-        duration="166" />
+        duration="941" />
     <task
         name="instant-run-dex"
         duration="0" />
     <task
         name="instant-run-transform"
-        duration="141" />
+        duration="796" />
     <task
         name="verifier"
-        duration="35" />
+        duration="52" />
 
     <artifact
         location="/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/outputs/apk/app-debug.apk"
         type="MAIN" />
 
     <build
-        timestamp="105459230603022"
+        timestamp="112409903594938"
         verifier="FULL_BUILD_REQUESTED" >
         <artifact
             location="/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/outputs/apk/app-debug.apk"

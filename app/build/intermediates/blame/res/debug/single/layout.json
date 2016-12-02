@@ -140,12 +140,12 @@
         "source": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/exploded-aar/com.android.support/design/23.1.1/res/layout/design_navigation_item_header.xml"
     },
     {
-        "merged": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/res/merged/debug/layout/content_saved_recordings.xml",
-        "source": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/src/main/res/layout/content_saved_recordings.xml"
-    },
-    {
         "merged": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/res/merged/debug/layout/content_help.xml",
         "source": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/src/main/res/layout/content_help.xml"
+    },
+    {
+        "merged": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/res/merged/debug/layout/content_saved_recordings.xml",
+        "source": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/src/main/res/layout/content_saved_recordings.xml"
     },
     {
         "merged": "/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/res/merged/debug/layout/abc_screen_toolbar.xml",

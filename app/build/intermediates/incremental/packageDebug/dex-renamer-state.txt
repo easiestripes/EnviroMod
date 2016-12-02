@@ -1,4 +1,7 @@
-#Thu Dec 01 21:36:28 EST 2016
-base.0=/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/transforms/dex/debug/folders/1000/1f/main
-renamed.0=classes.dex
-file.0=/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/transforms/dex/debug/folders/1000/1f/main/classes.dex
+#Fri Dec 02 01:20:59 EST 2016
+base.0=/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_87e22440456874218e02346245453c011dc74730
+renamed.1=classes.dex
+renamed.0=classes2.dex
+file.1=/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_0665ccb12430371f3320ff48d91d00639f7d4479/classes.dex
+base.1=/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_0665ccb12430371f3320ff48d91d00639f7d4479
+file.0=/Users/matthewleon/Google_Drive/Classes/CS_4720/final-project-cloyster/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_87e22440456874218e02346245453c011dc74730/classes.dex

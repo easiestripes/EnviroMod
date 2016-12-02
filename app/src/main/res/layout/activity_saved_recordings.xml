@@ -86,7 +86,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text=""
-            android:textSize="40sp"
+            android:textSize="27sp"
             android:id="@+id/song_title"
             android:layout_centerHorizontal="true" />
 
